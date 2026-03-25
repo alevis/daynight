@@ -1,0 +1,44 @@
+{
+  "name": "daynight-theme-scheduler",
+  "displayName": "DayNight Theme Scheduler",
+  "description": "Automatically switch VS Code themes based on configured time ranges.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Themes",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:daynight.openScheduler"
+  ],
+  "main": "./src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "daynight.openScheduler",
+        "title": "DayNight: Open Theme Scheduler"
+      }
+    ],
+    "configuration": {
+      "title": "DayNight Theme Scheduler",
+      "properties": {
+        "daynight.applyOnStartup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Apply the matching scheduled theme when VS Code starts."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test src/test/*.test.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0"
+  }
+}
