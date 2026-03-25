@@ -2,7 +2,7 @@
   "name": "daynight-theme-scheduler",
   "displayName": "DayNight Theme Scheduler",
   "description": "Automatically switch VS Code themes based on configured time ranges.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "alevis",
   "license": "MIT",
   "icon": "icon.jpg",
