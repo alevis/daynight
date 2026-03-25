@@ -2,12 +2,15 @@
 
 A Visual Studio Code extension that automates theme switching depending on the time of day.
 
+![DayNight Theme Scheduler UI](https://raw.githubusercontent.com/alevis/daynight/main/screenshot.png)
+
 ## Features
 
 - Configure up to four non-overlapping time ranges.
 - Assign a VS Code theme to each range.
 - Accept both `12-hour` inputs like `6:30 PM` and `24-hour` inputs like `18:30`.
 - Support overnight ranges such as `10:00 PM` to `6:00 AM`.
+- Search installed themes from each range card before selecting one.
 - Edit schedules in a glassmorphism-style UI from the command palette or the status bar.
 
 ## How it works

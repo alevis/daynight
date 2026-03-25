@@ -234,13 +234,36 @@ function getNextBoundaryDelay(rawSchedules, now = new Date()) {
 }
 
 function createDefaultSchedules() {
-  return Array.from({ length: MAX_SCHEDULES }, (_, index) => ({
-    id: `slot-${index + 1}`,
-    enabled: index === 0,
-    start: index === 0 ? "08:00" : "",
-    end: index === 0 ? "18:00" : "",
-    theme: ""
-  }));
+  return [
+    {
+      id: "slot-1",
+      enabled: true,
+      start: "06:30",
+      end: "18:30",
+      theme: ""
+    },
+    {
+      id: "slot-2",
+      enabled: true,
+      start: "18:30",
+      end: "06:30",
+      theme: ""
+    },
+    {
+      id: "slot-3",
+      enabled: false,
+      start: "",
+      end: "",
+      theme: ""
+    },
+    {
+      id: "slot-4",
+      enabled: false,
+      start: "",
+      end: "",
+      theme: ""
+    }
+  ].slice(0, MAX_SCHEDULES);
 }
 
 module.exports = {

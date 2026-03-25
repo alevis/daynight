@@ -67,6 +67,7 @@ function openScheduler(context) {
     vscode.ViewColumn.One,
     {
       enableScripts: true,
+      localResourceRoots: [context.extensionUri],
       retainContextWhenHidden: true
     }
   );
@@ -74,6 +75,7 @@ function openScheduler(context) {
   const render = (message) => {
     currentPanel.webview.html = getWebviewHtml(currentPanel.webview, context, {
       schedules: getSavedSchedules(context),
+      hasStoredSchedules: Boolean(getStoredSchedules(context)),
       timeFormat: context.globalState.get(FORMAT_KEY, "24h"),
       themes: getThemeOptions(),
       currentTheme: getCurrentThemeLabel(),
@@ -116,7 +118,7 @@ function openScheduler(context) {
       }
 
       if (message.type === "reset") {
-        await context.globalState.update(STORAGE_KEY, createDefaultSchedules());
+        await context.globalState.update(STORAGE_KEY, undefined);
         refreshStatusBar(context);
         scheduleNextThemeUpdate(context);
         render("Reset to the default layout.");
@@ -144,9 +146,13 @@ function openScheduler(context) {
   );
 }
 
-function getSavedSchedules(context) {
+function getStoredSchedules(context) {
   const saved = context.globalState.get(STORAGE_KEY);
-  return Array.isArray(saved) ? saved : createDefaultSchedules();
+  return Array.isArray(saved) ? saved : null;
+}
+
+function getSavedSchedules(context) {
+  return getStoredSchedules(context) || createDefaultSchedules();
 }
 
 function getThemeOptions() {

@@ -40,11 +40,13 @@
   "main": "./src/extension.js",
   "files": [
     ".vscode",
+    "fonts",
     "src",
     "README.md",
     "CHANGELOG.md",
     "LICENSE",
-    "icon.jpg"
+    "icon.jpg",
+    "screenshot.png"
   ],
   "contributes": {
     "commands": [

@@ -1,5 +1,6 @@
 "use strict";
 
+const vscode = require("vscode");
 const { MAX_SCHEDULES, formatTime, parseTimeString } = require("./scheduler");
 
 function escapeAttribute(value) {
@@ -19,6 +20,17 @@ function escapeHtml(value) {
 
 function getWebviewHtml(webview, context, payload) {
   const nonce = String(Date.now());
+  const outfitFontUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, "fonts", "Outfit", "Outfit-VariableFont_wght.ttf")
+  );
+  const codeFontUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(
+      context.extensionUri,
+      "fonts",
+      "Google_Sans_Code",
+      "GoogleSansCode-VariableFont_wght.ttf"
+    )
+  );
   const scheduleCards = payload.schedules
     .slice(0, MAX_SCHEDULES)
     .map((schedule, index) => renderCard(schedule, index, payload))
@@ -31,9 +43,25 @@ function getWebviewHtml(webview, context, payload) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src ${webview.cspSource}; connect-src https://api.sunrise-sunset.org; script-src 'nonce-${nonce}';" />
   <title>DayNight Theme Scheduler</title>
   <style>
+    @font-face {
+      font-family: "Outfit";
+      src: url("${outfitFontUri}") format("truetype");
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Google Sans Code";
+      src: url("${codeFontUri}") format("truetype");
+      font-style: normal;
+      font-weight: 300 800;
+      font-display: swap;
+    }
+
     :root {
       --bg-1: #081420;
       --bg-2: #102e43;
@@ -57,7 +85,7 @@ function getWebviewHtml(webview, context, payload) {
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: "Outfit", "Segoe UI", sans-serif;
       color: var(--text);
       background:
         radial-gradient(circle at top left, rgba(255, 209, 102, 0.25), transparent 28%),
@@ -97,6 +125,14 @@ function getWebviewHtml(webview, context, payload) {
       line-height: 0.95;
       letter-spacing: -0.04em;
       font-weight: 700;
+    }
+
+    strong,
+    .slot-label,
+    button,
+    select,
+    label {
+      font-family: "Outfit", "Segoe UI", sans-serif;
     }
 
     .headline p,
@@ -220,6 +256,12 @@ function getWebviewHtml(webview, context, payload) {
       padding: 18px;
       position: relative;
       overflow: hidden;
+      transition: opacity 140ms ease, transform 140ms ease, border-color 140ms ease;
+    }
+
+    .schedule-card.is-off {
+      opacity: 0.66;
+      border-color: rgba(255, 255, 255, 0.1);
     }
 
     .schedule-card::after {
@@ -248,16 +290,54 @@ function getWebviewHtml(webview, context, payload) {
 
     .toggle {
       display: inline-flex;
-      gap: 8px;
       align-items: center;
-      font-size: 0.9rem;
-      color: var(--muted);
+      justify-content: space-between;
+      gap: 10px;
+      padding: 5px;
+      min-width: 92px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
 
-    .toggle input {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--accent);
+    .toggle-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding-left: 8px;
+    }
+
+    .toggle-button {
+      position: relative;
+      width: 52px;
+      height: 30px;
+      border: none;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      cursor: pointer;
+      transition: background 140ms ease;
+    }
+
+    .toggle-button::after {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
+      transition: transform 140ms ease;
+    }
+
+    .toggle-button.is-on {
+      background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+    }
+
+    .toggle-button.is-on::after {
+      transform: translateX(22px);
     }
 
     .field {
@@ -283,6 +363,16 @@ function getWebviewHtml(webview, context, payload) {
       padding: 12px 14px;
       font: inherit;
       outline: none;
+    }
+
+    .field input[data-field="start"],
+    .field input[data-field="end"] {
+      font-family: "Google Sans Code", "SFMono-Regular", monospace;
+      letter-spacing: 0.02em;
+    }
+
+    .theme-input {
+      margin-bottom: 8px;
     }
 
     .field input::placeholder {
@@ -343,7 +433,7 @@ function getWebviewHtml(webview, context, payload) {
             <span>local time now</span>
           </div>
         </div>
-        <p>Use adjacent time ranges for handoffs. An overnight range like <strong>10:00 PM → 6:00 AM</strong> is supported.</p>
+        <p>Use adjacent time ranges for handoffs. An overnight range like <strong>10:00 PM → 6:00 AM</strong> is supported. First-run defaults can auto-align to local sunrise and sunset when location access is available, with a `6:00 AM / 6:00 PM` fallback if it is not.</p>
       </div>
     </section>
 
@@ -374,6 +464,7 @@ function getWebviewHtml(webview, context, payload) {
     const vscode = acquireVsCodeApi();
     const initialState = ${state};
     let timeFormat = initialState.timeFormat;
+    let appliedLocationDefaults = false;
 
     function normalizeForDisplay(value) {
       const minutes = parseTime(value);
@@ -423,11 +514,135 @@ function getWebviewHtml(webview, context, payload) {
     function currentPayload() {
       return Array.from(document.querySelectorAll(".schedule-card")).map((card) => ({
         id: card.dataset.id,
-        enabled: card.querySelector('[data-field="enabled"]').checked,
+        enabled: card.querySelector('[data-field="enabled"]').dataset.enabled === "true",
         theme: card.querySelector('[data-field="theme"]').value,
         start: card.querySelector('[data-field="start"]').value.trim(),
         end: card.querySelector('[data-field="end"]').value.trim()
       }));
+    }
+
+    function setCardEnabled(card, enabled) {
+      const button = card.querySelector('[data-field="enabled"]');
+      button.dataset.enabled = enabled ? "true" : "false";
+      button.setAttribute("aria-pressed", enabled ? "true" : "false");
+      button.classList.toggle("is-on", enabled);
+      button.textContent = enabled ? "On" : "Off";
+      card.classList.toggle("is-off", !enabled);
+    }
+
+    function attachToggleHandlers() {
+      document.querySelectorAll('[data-field="enabled"]').forEach((button) => {
+        setCardEnabled(button.closest(".schedule-card"), button.dataset.enabled === "true");
+        button.addEventListener("click", () => {
+          const card = button.closest(".schedule-card");
+          const nextValue = button.dataset.enabled !== "true";
+          setCardEnabled(card, nextValue);
+        });
+      });
+    }
+
+    function normalizeMinutes(minutes) {
+      return ((Math.round(minutes) % 1440) + 1440) % 1440;
+    }
+
+    function setFallbackDayNightDefaults(message) {
+      const cards = Array.from(document.querySelectorAll(".schedule-card"));
+      if (cards.length < 2) {
+        return;
+      }
+
+      const dayStart = formatTimeValue(360, timeFormat);
+      const dayEnd = formatTimeValue(1080, timeFormat);
+
+      cards[0].querySelector('[data-field="start"]').value = dayStart;
+      cards[0].querySelector('[data-field="end"]').value = dayEnd;
+      setCardEnabled(cards[0], true);
+
+      cards[1].querySelector('[data-field="start"]').value = dayEnd;
+      cards[1].querySelector('[data-field="end"]').value = dayStart;
+      setCardEnabled(cards[1], true);
+
+      cards.slice(2).forEach((card) => setCardEnabled(card, false));
+      setMessage(message, "");
+    }
+
+    function applyLocationDefaults(latitude, longitude) {
+      return fetch(\`https://api.sunrise-sunset.org/json?lat=\${latitude}&lng=\${longitude}&formatted=0\`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("sun-api");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const sunrise = Date.parse(data?.results?.sunrise || "");
+          const sunset = Date.parse(data?.results?.sunset || "");
+          if (Number.isNaN(sunrise) || Number.isNaN(sunset)) {
+            throw new Error("sun-api-parse");
+          }
+          return {
+            sunrise: new Date(sunrise).getHours() * 60 + new Date(sunrise).getMinutes(),
+            sunset: new Date(sunset).getHours() * 60 + new Date(sunset).getMinutes()
+          };
+        })
+        .then(({ sunrise, sunset }) => {
+          const applied = applyDayNightDefaults(sunrise, sunset);
+          if (!applied) {
+            throw new Error("sun-apply");
+          }
+          setMessage("Loaded local sunrise and sunset as your default day/night pair. Pick themes, then save.", "");
+        });
+    }
+
+    function applyDayNightDefaults(sunrise, sunset) {
+      if (sunrise === null || sunset === null) {
+        return false;
+      }
+
+      const cards = Array.from(document.querySelectorAll(".schedule-card"));
+      if (cards.length < 2) {
+        return false;
+      }
+
+      const dayStart = formatTimeValue(normalizeMinutes(sunrise), timeFormat);
+      const dayEnd = formatTimeValue(normalizeMinutes(sunset), timeFormat);
+      const nightStart = dayEnd;
+      const nightEnd = dayStart;
+
+      cards[0].querySelector('[data-field="start"]').value = dayStart;
+      cards[0].querySelector('[data-field="end"]').value = dayEnd;
+      setCardEnabled(cards[0], true);
+
+      cards[1].querySelector('[data-field="start"]').value = nightStart;
+      cards[1].querySelector('[data-field="end"]').value = nightEnd;
+      setCardEnabled(cards[1], true);
+
+      cards.slice(2).forEach((card) => setCardEnabled(card, false));
+      appliedLocationDefaults = true;
+      return true;
+    }
+
+    function tryLoadLocationDefaults() {
+      if (initialState.hasStoredSchedules || appliedLocationDefaults) {
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        setFallbackDayNightDefaults("Using fallback 6:00 AM / 6:00 PM defaults. Location access is not available here.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          applyLocationDefaults(position.coords.latitude, position.coords.longitude).catch(() => {
+            setFallbackDayNightDefaults("Using fallback 6:00 AM / 6:00 PM defaults. Sunrise lookup was unavailable.");
+          });
+        },
+        () => {
+          setFallbackDayNightDefaults("Using fallback 6:00 AM / 6:00 PM defaults. Allow location access if you want sunrise/sunset times.");
+        },
+        { enableHighAccuracy: false, timeout: 6000, maximumAge: 3600000 }
+      );
     }
 
     function setMessage(text, type) {
@@ -480,6 +695,9 @@ function getWebviewHtml(webview, context, payload) {
         setMessage(message.text, message.ok ? "success" : "");
       }
     });
+
+    attachToggleHandlers();
+    tryLoadLocationDefaults();
   </script>
 </body>
 </html>`;
@@ -489,26 +707,36 @@ function renderCard(schedule, index, payload) {
   const previewStart = formatExistingValue(schedule.start, payload.timeFormat);
   const previewEnd = formatExistingValue(schedule.end, payload.timeFormat);
   const options = payload.themes
-    .map((theme) => {
-      const selected = theme.id === schedule.theme ? "selected" : "";
-      return `<option value="${escapeAttribute(theme.id)}" ${selected}>${escapeHtml(theme.label)}</option>`;
-    })
+    .map((theme) => `<option value="${escapeAttribute(theme.id)}"></option>`)
     .join("");
 
   return `<article class="glass schedule-card" data-id="${escapeAttribute(schedule.id)}">
     <div class="card-head">
       <div class="slot-label">Range ${index + 1}</div>
       <label class="toggle">
-        <input type="checkbox" data-field="enabled" ${schedule.enabled ? "checked" : ""} />
-        Enabled
+        <span class="toggle-label">Range</span>
+        <button
+          type="button"
+          class="toggle-button ${schedule.enabled ? "is-on" : ""}"
+          data-field="enabled"
+          data-enabled="${schedule.enabled ? "true" : "false"}"
+          aria-pressed="${schedule.enabled ? "true" : "false"}"
+        >${schedule.enabled ? "On" : "Off"}</button>
       </label>
     </div>
     <div class="field">
       <label>Theme</label>
-      <select data-field="theme">
-        <option value="">Select a theme</option>
+      <input
+        type="text"
+        class="theme-input"
+        data-field="theme"
+        list="theme-list-${index}"
+        value="${escapeAttribute(schedule.theme)}"
+        placeholder="Search or enter a theme name"
+      />
+      <datalist id="theme-list-${index}">
         ${options}
-      </select>
+      </datalist>
     </div>
     <div class="field">
       <label>Start time</label>
