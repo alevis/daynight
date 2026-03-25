@@ -39,7 +39,6 @@
   ],
   "main": "./src/extension.js",
   "files": [
-    ".vscode",
     "fonts",
     "src",
     "README.md",

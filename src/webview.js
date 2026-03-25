@@ -379,6 +379,17 @@ function getWebviewHtml(webview, context, payload) {
       color: rgba(239, 246, 255, 0.35);
     }
 
+    .field input.invalid {
+      border-color: rgba(255, 138, 128, 0.9);
+      box-shadow: 0 0 0 1px rgba(255, 138, 128, 0.25);
+    }
+
+    .field-error {
+      min-height: 1em;
+      font-size: 0.78rem;
+      color: var(--danger);
+    }
+
     .hint {
       font-size: 0.82rem;
       color: rgba(239, 246, 255, 0.55);
@@ -465,6 +476,7 @@ function getWebviewHtml(webview, context, payload) {
     const initialState = ${state};
     let timeFormat = initialState.timeFormat;
     let appliedLocationDefaults = false;
+    const installedThemes = new Set(initialState.themes.map((theme) => theme.id));
 
     function normalizeForDisplay(value) {
       const minutes = parseTime(value);
@@ -528,6 +540,44 @@ function getWebviewHtml(webview, context, payload) {
       button.classList.toggle("is-on", enabled);
       button.textContent = enabled ? "On" : "Off";
       card.classList.toggle("is-off", !enabled);
+    }
+
+    function clearThemeErrors() {
+      document.querySelectorAll('[data-field="theme"]').forEach((input) => {
+        input.classList.remove("invalid");
+      });
+      document.querySelectorAll(".field-error").forEach((node) => {
+        node.textContent = "";
+      });
+    }
+
+    function markInvalidThemeFields(invalidIds) {
+      clearThemeErrors();
+      (invalidIds || []).forEach((id) => {
+        const card = document.querySelector(\`.schedule-card[data-id="\${CSS.escape(id)}"]\`);
+        if (!card) {
+          return;
+        }
+        const input = card.querySelector('[data-field="theme"]');
+        const error = card.querySelector(".field-error");
+        if (input) {
+          input.classList.add("invalid");
+        }
+        if (error) {
+          error.textContent = "Pick one of the installed theme suggestions.";
+        }
+      });
+    }
+
+    function validateThemeInput(input) {
+      const value = input.value.trim();
+      const isValid = value === "" || installedThemes.has(value);
+      input.classList.toggle("invalid", !isValid);
+      const error = input.closest(".field")?.querySelector(".field-error");
+      if (error) {
+        error.textContent = isValid ? "" : "Pick one of the installed theme suggestions.";
+      }
+      return isValid;
     }
 
     function attachToggleHandlers() {
@@ -666,6 +716,7 @@ function getWebviewHtml(webview, context, payload) {
     });
 
     document.getElementById("save").addEventListener("click", () => {
+      clearThemeErrors();
       vscode.postMessage({ type: "save", schedules: currentPayload(), timeFormat });
     });
 
@@ -686,9 +737,19 @@ function getWebviewHtml(webview, context, payload) {
       });
     });
 
+    document.querySelectorAll('input[data-field="theme"]').forEach((input) => {
+      input.addEventListener("input", () => {
+        validateThemeInput(input);
+      });
+      input.addEventListener("blur", () => {
+        validateThemeInput(input);
+      });
+    });
+
     window.addEventListener("message", (event) => {
       const message = event.data;
       if (message.type === "error") {
+        markInvalidThemeFields(message.invalidThemeIds);
         setMessage(message.text, "error");
       }
       if (message.type === "preview") {
@@ -737,6 +798,7 @@ function renderCard(schedule, index, payload) {
       <datalist id="theme-list-${index}">
         ${options}
       </datalist>
+      <div class="field-error"></div>
     </div>
     <div class="field">
       <label>Start time</label>

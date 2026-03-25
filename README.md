@@ -36,6 +36,10 @@ A Visual Studio Code extension that automates theme switching depending on the t
 npm test
 ```
 
+### Install dependencies
+
+Use `npm install` for this project. The checked-in lockfile is `package-lock.json`.
+
 ### Package locally
 
 Install dependencies, then package with your preferred VS Code extension workflow, for example `vsce package`.

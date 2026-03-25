@@ -109,6 +109,19 @@ function openScheduler(context) {
           return;
         }
 
+        const validThemes = new Set(getThemeOptions().map((theme) => theme.id));
+        const invalidThemeSchedule = result.schedules.find(
+          (schedule, index) => schedule.enabled && schedule.theme && !validThemes.has(schedule.theme)
+        );
+        if (invalidThemeSchedule) {
+          currentPanel.webview.postMessage({
+            type: "error",
+            text: `Range ${result.schedules.indexOf(invalidThemeSchedule) + 1}: choose a theme from the installed-theme suggestions.`,
+            invalidThemeIds: [invalidThemeSchedule.id]
+          });
+          return;
+        }
+
         await context.globalState.update(STORAGE_KEY, result.schedules);
         await context.globalState.update(FORMAT_KEY, message.timeFormat === "12h" ? "12h" : "24h");
         refreshStatusBar(context);
