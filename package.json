@@ -3,8 +3,29 @@
   "displayName": "DayNight Theme Scheduler",
   "description": "Automatically switch VS Code themes based on configured time ranges.",
   "version": "0.1.0",
-  "publisher": "local",
+  "publisher": "alevis",
   "license": "MIT",
+  "icon": "icon.jpg",
+  "galleryBanner": {
+    "color": "#102e43",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alevis/daynight.git"
+  },
+  "homepage": "https://github.com/alevis/daynight#readme",
+  "bugs": {
+    "url": "https://github.com/alevis/daynight/issues"
+  },
+  "keywords": [
+    "vscode",
+    "theme",
+    "scheduler",
+    "time-based",
+    "automation",
+    "appearance"
+  ],
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -17,6 +38,14 @@
     "onCommand:daynight.openScheduler"
   ],
   "main": "./src/extension.js",
+  "files": [
+    ".vscode",
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "icon.jpg"
+  ],
   "contributes": {
     "commands": [
       {
@@ -36,6 +65,7 @@
     }
   },
   "scripts": {
+    "vscode:prepublish": "npm test",
     "test": "node --test src/test/*.test.js"
   },
   "devDependencies": {
