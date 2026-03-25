@@ -444,7 +444,7 @@ function getWebviewHtml(webview, context, payload) {
             <span>local time now</span>
           </div>
         </div>
-        <p>Use adjacent time ranges for handoffs. An overnight range like <strong>10:00 PM → 6:00 AM</strong> is supported. First-run defaults can auto-align to local sunrise and sunset when location access is available, with a `6:00 AM / 6:00 PM` fallback if it is not.</p>
+        <p>Use adjacent time ranges for handoffs. An overnight range like <strong>10:00 PM → 6:00 AM</strong> is supported. First-run defaults can auto-align to local sunrise and sunset when location access is available, with a <strong>6:00 AM / 6:00 PM</strong> fallback if it is not.</p>
       </div>
     </section>
 
